@@ -57,14 +57,14 @@ def parse_response_ensembl(resp: dict):
 
 def access_database(ids: list):
     dbRegEx = {"uniprot":"[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}",
-               "ensembl":"ENS[A-Z]*(E|FM|G|GT|P|R|T)[0-9]{11}|MGP_[A-Za-z0-9]*_[0-9]{11}"}
+               "ensembl":"ENS[A-Z]{,4}(E|FM|G|GT|P|R|T)[0-9]{11}|MGP_[A-Za-z0-9]*_[0-9]{11}"}
     if re.fullmatch(dbRegEx["uniprot"], ids[0])!=None:
         return parse_response_uniprot(get_uniprot(ids))
     else:
         if re.fullmatch(dbRegEx["ensembl"], ids[0])!=None:
             return parse_response_ensembl(get_ensembl(ids))
 
-# if __name__ == "__main__":
-#     ids = ["ENSMUSG00000041147", "ENSG00000139618"]
-#     # ids = ['P11473', 'P13053']
-#     print(access_database(ids))
+if __name__ == "__main__":
+    ids = ["ENSMUSG00000041147", "ENSG00000139618"]
+    # ids = ['P11473', 'P13053']
+    print(access_database(ids))
