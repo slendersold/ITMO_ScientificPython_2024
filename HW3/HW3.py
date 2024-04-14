@@ -1,3 +1,8 @@
+import enum
+
+class CarStatus(enum.Enum):
+    ON_ROAD = 1
+    PARKING = 2
 class IncreaseSpeed():
     '''
     Iterator for increasing the speed with the default step of 10 km/h
@@ -51,7 +56,6 @@ class DecreaseSpeed():
             self.current_speed = 0
             return self.current_speed
 
-
 class Car():
     '''
     Car class.
@@ -69,10 +73,20 @@ class Car():
       total_cars: show the total amount of cars on the road
       show_weather: shows the current weather conditions
     '''
-
+    car_ctr = 0
     def __init__(self, max_speed: int, current_speed = 0):
         self.max_speed = max_speed
-        self.current_speed = current_speed
+        if current_speed <= 0:
+            self.current_speed = 0
+            self.state = CarStatus.PARKING
+        else:
+            self.current_speed = current_speed
+            self.state = CarStatus.ON_ROAD
+            Car.car_ctr += 1
+        self.decr_iter = iter(DecreaseSpeed(current_speed))
+        self.incr_iter = iter(IncreaseSpeed(current_speed, max_speed))
+
+
 
     def accelerate(self, upper_border=None):
         # check for state
@@ -82,7 +96,10 @@ class Car():
         # print a message at each speed increase
         # else increase the speed once
         # return the message with current speed
-        pass
+        if upper_border > self.max_speed:
+            upper_border = self.max_speed
+        while upper_border > self.current_speed:
+            self.current_speed = next(self.incr_iter)
 
     def brake(self, lower_border=None):
         # create an instance of DecreaseSpeed iterator
@@ -91,7 +108,11 @@ class Car():
         # print a message at each speed decrease
         # else increase the speed once
         # return the message with current speed
-        pass
+        if lower_border < 0:
+            lower_border = 0
+        while lower_border < self.current_speed:
+            self.current_speed = next(self.decr_iter)
+
 
     # the next three functions you have to define yourself
     # one of the is class method, one - static and one - regular method (not necessarily in this order, it's for you to think)
@@ -99,12 +120,20 @@ class Car():
     def parking(self):
         # gets car off the road (use state and class variable)
         # check: should not be able to move the car off the road if it's not there
-        pass
+        self.brake(0)
+        self.state = CarStatus.PARKING
 
     def total_cars(self):
         # displays total amount of cars on the road
-        pass
+        print(Car.car_ctr)
+        return Car.car_ctr
 
     def show_weather(self):
         # displays weather conditions
         pass
+
+if __name__ == "__main__":
+    porche = Car(400, 0)
+    kopeika = Car(60, 40)
+    porche.accelerate(600)
+    print(porche.current_speed)
