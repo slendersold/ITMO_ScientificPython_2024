@@ -1,4 +1,5 @@
 import enum
+import openmeteo_requests
 
 class CarStatus(enum.Enum):
     ON_ROAD = 1
@@ -73,7 +74,7 @@ class Car():
       total_cars: show the total amount of cars on the road
       show_weather: shows the current weather conditions
     '''
-    car_ctr = 0
+    __car_ctr = 0
     def __init__(self, max_speed: int, current_speed = 0):
         self.max_speed = max_speed
         if current_speed <= 0:
@@ -82,7 +83,7 @@ class Car():
         else:
             self.current_speed = current_speed
             self.state = CarStatus.ON_ROAD
-            Car.car_ctr += 1
+            Car.__car_ctr += 1
         self.decr_iter = iter(DecreaseSpeed(current_speed))
         self.incr_iter = iter(IncreaseSpeed(current_speed, max_speed))
 
@@ -96,10 +97,13 @@ class Car():
         # print a message at each speed increase
         # else increase the speed once
         # return the message with current speed
+        temp_speed = self.current_speed
         if upper_border > self.max_speed:
             upper_border = self.max_speed
         while upper_border > self.current_speed:
             self.current_speed = next(self.incr_iter)
+            print(f"Speed increases by 10")
+        print(f"The speed of this car have been increased from {temp_speed} to {self.current_speed}")
 
     def brake(self, lower_border=None):
         # create an instance of DecreaseSpeed iterator
@@ -108,10 +112,13 @@ class Car():
         # print a message at each speed decrease
         # else increase the speed once
         # return the message with current speed
+        temp_speed = self.current_speed
         if lower_border < 0:
             lower_border = 0
         while lower_border < self.current_speed:
             self.current_speed = next(self.decr_iter)
+            print(f"Speed decreases by 10")
+        print(f"The speed of this car have been decreased from {temp_speed} to {self.current_speed}")
 
 
     # the next three functions you have to define yourself
@@ -123,17 +130,43 @@ class Car():
         self.brake(0)
         self.state = CarStatus.PARKING
 
-    def total_cars(self):
+    @classmethod
+    def total_cars(cls):
         # displays total amount of cars on the road
-        print(Car.car_ctr)
-        return Car.car_ctr
+        print(cls.__car_ctr)
+        return cls.__car_ctr
 
-    def show_weather(self):
+    @staticmethod
+    def show_weather():
+        openmeteo = openmeteo_requests.Client()
+        url = "https://api.open-meteo.com/v1/forecast"
+        params = {
+            "latitude": 59.9386,  # for St.Petersburg
+            "longitude": 30.3141,  # for St.Petersburg
+            "current": ["temperature_2m", "apparent_temperature", "rain", "wind_speed_10m"],
+            "wind_speed_unit": "ms",
+            "timezone": "Europe/Moscow"
+        }
         # displays weather conditions
-        pass
+        response = openmeteo.weather_api(url, params=params)[0]
+
+        # The order of variables needs to be the same as requested in params->current!
+        current = response.Current()
+        current_temperature_2m = current.Variables(0).Value()
+        current_apparent_temperature = current.Variables(1).Value()
+        current_rain = current.Variables(2).Value()
+        current_wind_speed_10m = current.Variables(3).Value()
+
+        print(f"Current temperature: {round(current_temperature_2m, 0)} C")
+        print(f"Current apparent_temperature: {round(current_apparent_temperature, 0)} C")
+        print(f"Current rain: {current_rain} mm")
+        print(f"Current wind_speed: {round(current_wind_speed_10m, 1)} m/s")
+
 
 if __name__ == "__main__":
     porche = Car(400, 0)
     kopeika = Car(60, 40)
     porche.accelerate(600)
     print(porche.current_speed)
+    Car.show_weather()
+    Car.total_cars()
