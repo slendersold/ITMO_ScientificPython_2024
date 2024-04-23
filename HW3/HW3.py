@@ -24,6 +24,8 @@ class IncreaseSpeed():
         return self
 
     def __next__(self):
+        if self.current_speed == self.max_speed:
+            raise StopIteration
         if self.current_speed <= self.max_speed - 10:
             self.current_speed += 10
             return self.current_speed
@@ -50,6 +52,8 @@ class DecreaseSpeed():
         return self
 
     def __next__(self):
+        if self.current_speed == 0:
+            raise StopIteration
         if self.current_speed >= 10:
             self.current_speed -= 10
             return self.current_speed
@@ -98,12 +102,19 @@ class Car():
         # else increase the speed once
         # return the message with current speed
         temp_speed = self.current_speed
-        if upper_border > self.max_speed:
-            upper_border = self.max_speed
-        while upper_border > self.current_speed:
+        if temp_speed == 0:
+            self.state = CarStatus.ON_ROAD
+        if upper_border==None:
             self.current_speed = next(self.incr_iter)
             print(f"Speed increases by 10")
-        print(f"The speed of this car have been increased from {temp_speed} to {self.current_speed}")
+            print(f"The speed of this car have been increased from {temp_speed} to {self.current_speed}")
+        else:
+            if upper_border > self.max_speed:
+                upper_border = self.max_speed
+            while upper_border > self.current_speed:
+                self.current_speed = next(self.incr_iter)
+                print(f"Speed increases by 10")
+            print(f"The speed of this car have been increased from {temp_speed} to {self.current_speed}")
 
     def brake(self, lower_border=None):
         # create an instance of DecreaseSpeed iterator
@@ -113,12 +124,18 @@ class Car():
         # else increase the speed once
         # return the message with current speed
         temp_speed = self.current_speed
-        if lower_border < 0:
-            lower_border = 0
-        while lower_border < self.current_speed:
+        if lower_border == None:
             self.current_speed = next(self.decr_iter)
             print(f"Speed decreases by 10")
-        print(f"The speed of this car have been decreased from {temp_speed} to {self.current_speed}")
+            print(f"The speed of this car have been decreased from {temp_speed} to {self.current_speed}")
+        else:
+            if lower_border < 0:
+                lower_border = 0
+            while lower_border < self.current_speed:
+                self.current_speed = next(self.decr_iter)
+                print(f"Speed decreases by 10")
+            print(f"The speed of this car have been decreased from {temp_speed} to {self.current_speed}")
+
 
 
     # the next three functions you have to define yourself
@@ -128,7 +145,13 @@ class Car():
         # gets car off the road (use state and class variable)
         # check: should not be able to move the car off the road if it's not there
         self.brake(0)
-        self.state = CarStatus.PARKING
+        if self.state != CarStatus.PARKING:
+            self.state = CarStatus.PARKING
+            Car.__car_ctr -= 1
+            print("Parking the car...")
+        else:
+            print("The car is already parked")
+
 
     @classmethod
     def total_cars(cls):
@@ -166,6 +189,7 @@ class Car():
 if __name__ == "__main__":
     porche = Car(400, 0)
     kopeika = Car(60, 40)
+    porche.accelerate(600)
     porche.accelerate(600)
     print(porche.current_speed)
     Car.show_weather()
