@@ -1,4 +1,7 @@
 *.odt
+hw5_data/
+descriptors/
+small-molecule-design-toolkit/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
